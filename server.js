@@ -19,8 +19,18 @@ mongoose.connect(process.env.MONGO_URI)
 const News = require('./models/News');
 const Place = require('./models/Place');
 
+// Middleware для проверки токена
+const authMiddleware = (req, res, next) => {
+  const token = req.headers['authorization'];
+  if (token === process.env.ADMIN_TOKEN) {
+    next();
+  } else {
+    res.status(403).json({ error: 'Доступ запрещён' });
+  }
+};
+
 // Маршруты
-app.use('/api', require('./routes/api'));
+app.use('/api', require('./routes/api')(authMiddleware));
 
 // Настройка Telegram-бота
 const bot = new TelegramBot(process.env.TELEGRAM_TOKEN, { polling: true });
