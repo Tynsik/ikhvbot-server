@@ -29,11 +29,20 @@ const authMiddleware = (req, res, next) => {
   }
 };
 
-// Маршруты
+// Маршруты API
 app.use('/api', require('./routes/api')(authMiddleware));
 
-// Настройка Telegram-бота
-const bot = new TelegramBot(process.env.TELEGRAM_TOKEN, { polling: true });
+// Настройка Telegram-бота с вебхуком
+const bot = new TelegramBot(process.env.TELEGRAM_TOKEN);
+const webhookUrl = `https://ikhvbot-server.onrender.com/bot${process.env.TELEGRAM_TOKEN}`;
+bot.setWebHook(webhookUrl);
+
+// Обработка сообщений через вебхук
+app.post(`/bot${process.env.TELEGRAM_TOKEN}`, (req, res) => {
+  bot.processUpdate(req.body);
+  res.sendStatus(200);
+});
+
 bot.onText(/\/start/, (msg) => {
   const chatId = msg.chat.id;
   bot.sendMessage(chatId, 'Добро пожаловать в iKHVbot!', {
